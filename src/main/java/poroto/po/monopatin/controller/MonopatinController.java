@@ -208,7 +208,9 @@ public class MonopatinController {
     }
 
     @GetMapping("/reporteMonopatines") 
-    public List<ReporteMonopatinesDTO> generarReporte(@RequestBody boolean conPausa) {
+    public List<ReporteMonopatinesDTO> generarReporte() {
+        // Hardcodeado para que siempre tenga pausa
+        boolean conPausa = true;
         ArrayList<ReporteMonopatinesDTO> reporte = new ArrayList<ReporteMonopatinesDTO>();
 
         // Busca monopatines y los ordena por kilometros
