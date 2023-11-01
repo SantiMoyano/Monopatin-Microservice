@@ -4,7 +4,9 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -229,4 +231,16 @@ public class MonopatinController {
         
         return reporte;
     }
+
+    @GetMapping("/cantidadMonopatines")
+    public Map<String, Integer> obtenerCantidadMonopatines() {
+    int enOperacion = monoRepo.countMonopatinesEnOperacion();
+    int enMantenimiento = monoRepo.countMonopatinesEnMantenimiento();
+
+    Map<String, Integer> cantidadMonopatines = new HashMap<>();
+    cantidadMonopatines.put("Operacion", enOperacion);
+    cantidadMonopatines.put("Mantenimiento", enMantenimiento);
+
+    return cantidadMonopatines;
+}
 }
