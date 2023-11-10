@@ -23,6 +23,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import poroto.po.monopatin.dtos.FinalizarViajeDTO;
 import poroto.po.monopatin.dtos.ReporteMonopatinesDTO;
 // import poroto.po.monopatin.dtos.terminarViajeDTO;
@@ -37,6 +40,7 @@ import poroto.po.monopatin.servicio.ParadaServicio;
 import poroto.po.monopatin.servicio.ViajeServicio;
 
 @RestController
+@Tag(name = "Servicio Monopatin", description = "Encargado de todo lo referente al vehiculo monopatin")
 @RequestMapping("/monopatin")
 public class MonopatinController {
     @Autowired
@@ -60,13 +64,16 @@ public class MonopatinController {
     }
 
     @PostMapping
-    // @ApiOperation(value = "Agregarrecurso por ID", response = Monopatin.class)
+    @Operation(summary = "Agregar un monopatin", description = "Se incorpora un monoptin especificado en un JSON")
     public Monopatin registrarMono(@RequestBody Monopatin m) {
         return monoRepo.save(m);
     }
 
     @PutMapping("/encender/{idMono}")
-    public String encender(@PathVariable Long idMono) {
+    @Operation(summary = "Encender el Monopatin", description = "Se computa el consomo y se hace uso de la bateria")
+
+    public String encender(
+            @Parameter(description = "El Id del Monopatin a encender", example = "123") @PathVariable Long idMono) {
         Monopatin m = monoRepo.findById(idMono).get();
         if (m != null) {
             m.setEncendido(true);
@@ -110,10 +117,6 @@ public class MonopatinController {
 
     }
 
-    /**
-     * @param id
-     * @return Monopatin
-     */
     @PutMapping("/mantenimiento/{id}/listo")
     public Monopatin ponerEnLaCalle(@PathVariable Long id) {
         Monopatin m = monoRepo.findById(id).get();
@@ -134,41 +137,6 @@ public class MonopatinController {
     public void borrar(@PathVariable Long id) {
         monoRepo.deleteById(id);
     }
-
-    // @GetMapping("/paradas")
-    // public List<Monopatin> dameParadas() {
-    // List<Parada> listaParadas = new ArrayList<Parada>();
-    // List<Monopatin> resultado = new ArrayList<Monopatin>();
-    // String body = servicio.dameParadas().getBody();
-    // ObjectMapper jsonMap = new ObjectMapper();
-    // JsonNode array;
-    // try {
-    // array = jsonMap.readTree(body);
-    // for (JsonNode nodo : array) {
-
-    // Long id = nodo.get("id_parada").asLong();
-    // Float latitud = (float) nodo.get("latitud").asDouble();
-    // Float longitud = (float) nodo.get("longitud").asDouble();
-    // Parada p = new Parada(id, latitud, longitud);
-
-    // listaParadas.add(p);
-    // }
-    // } catch (JsonProcessingException e) {
-    // // TODO Auto-generated catch block
-    // e.printStackTrace();
-    // }
-    // List<Monopatin> monos = this.dameMonos();
-    // for (Monopatin mono : monos) {
-    // Long parada = mono.estaEnAlguna(listaParadas);
-    // if (parada != null) {
-    // mono.setId_parada(parada);
-    // monoRepo.save(mono);
-    // resultado.add(mono);
-    // }
-
-    // }
-    // return resultado;
-    // }
 
     @GetMapping("/paradaCercana/{idMono}")
     public List<Distancia> dameParadaCercana(@PathVariable Long idMono) {
@@ -209,7 +177,7 @@ public class MonopatinController {
         return (!m.isEn_taller() && !m.isEncendido() && paradaServicio.estaEstacionado(m));
     }
 
-    @GetMapping("/reporteMonopatines") 
+    @GetMapping("/reporteMonopatines")
     public List<ReporteMonopatinesDTO> generarReporte() {
         // Hardcodeado para que siempre tenga pausa
         boolean conPausa = true;
@@ -217,7 +185,8 @@ public class MonopatinController {
 
         // Busca monopatines y los ordena por kilometros
         List<Monopatin> monopatines = monoRepo.findAll();
-        Collections.sort(monopatines, (m1, m2) -> Integer.compare(m2.getKm_ultimo_service(), m1.getKm_ultimo_service()));
+        Collections.sort(monopatines,
+                (m1, m2) -> Integer.compare(m2.getKm_ultimo_service(), m1.getKm_ultimo_service()));
 
         for (Monopatin monopatin : monopatines) {
             ReporteMonopatinesDTO dto = new ReporteMonopatinesDTO();
@@ -228,19 +197,19 @@ public class MonopatinController {
             }
             reporte.add(dto);
         }
-        
+
         return reporte;
     }
 
     @GetMapping("/cantidadMonopatines")
     public Map<String, Integer> obtenerCantidadMonopatines() {
-    int enOperacion = monoRepo.countMonopatinesEnOperacion();
-    int enMantenimiento = monoRepo.countMonopatinesEnMantenimiento();
+        int enOperacion = monoRepo.countMonopatinesEnOperacion();
+        int enMantenimiento = monoRepo.countMonopatinesEnMantenimiento();
 
-    Map<String, Integer> cantidadMonopatines = new HashMap<>();
-    cantidadMonopatines.put("Operacion", enOperacion);
-    cantidadMonopatines.put("Mantenimiento", enMantenimiento);
+        Map<String, Integer> cantidadMonopatines = new HashMap<>();
+        cantidadMonopatines.put("Operacion", enOperacion);
+        cantidadMonopatines.put("Mantenimiento", enMantenimiento);
 
-    return cantidadMonopatines;
-}
+        return cantidadMonopatines;
+    }
 }
