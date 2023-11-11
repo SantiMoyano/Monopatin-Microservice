@@ -19,6 +19,7 @@ public class GenToken {
             .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
             .compact();
     }
+    
 
     public String getUsernameFromToken(String token) {
         return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody().getSubject();
