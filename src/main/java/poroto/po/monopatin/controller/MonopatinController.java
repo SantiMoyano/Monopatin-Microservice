@@ -33,6 +33,7 @@ import poroto.po.monopatin.dtos.ReporteMonopatinesDTO;
 // import io.swagger.annotations.ApiOperation;
 import poroto.po.monopatin.entity.Monopatin;
 import poroto.po.monopatin.entity.Parada;
+import poroto.po.monopatin.jwt.GenToken;
 import poroto.po.monopatin.repsitory.MonopatinRepo;
 import poroto.po.monopatin.response.Distancia;
 import poroto.po.monopatin.servicio.CuentaServicio;
@@ -57,6 +58,16 @@ public class MonopatinController {
 
     @Autowired
     private ParadaServicio paradaServicio;
+
+    @Autowired
+    private GenToken tokenService;
+
+    @GetMapping("/dameToken")
+    public String dameToken() {
+        String x = tokenService.generateToken("diego");
+        String r=tokenService.getUsernameFromToken(x);
+        return r;
+    }
 
     @GetMapping
     public List<Monopatin> dameMonos() {
