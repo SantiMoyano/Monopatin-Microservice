@@ -9,12 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.function.EntityResponse;
@@ -23,9 +25,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
+// import io.swagger.v3.oas.annotations.Operation;
+// import io.swagger.v3.oas.annotations.Parameter;
+// import io.swagger.v3.oas.annotations.tags.Tag;
 import poroto.po.monopatin.dtos.FinalizarViajeDTO;
 import poroto.po.monopatin.dtos.ReporteMonopatinesDTO;
 // import poroto.po.monopatin.dtos.terminarViajeDTO;
@@ -41,7 +43,7 @@ import poroto.po.monopatin.servicio.ParadaServicio;
 import poroto.po.monopatin.servicio.ViajeServicio;
 
 @RestController
-@Tag(name = "Servicio Monopatin", description = "Encargado de todo lo referente al vehiculo monopatin")
+// @Tag(name = "Servicio Monopatin", description = "Encargado de todo lo referente al vehiculo monopatin")
 @RequestMapping("/monopatin")
 public class MonopatinController {
     @Autowired
@@ -62,29 +64,43 @@ public class MonopatinController {
     @Autowired
     private GenToken tokenService;
 
+
+    @GetMapping("/hola")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public String hola(){
+        return "hola";
+    }
+
+@GetMapping("/token")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+
+    public String mostrarToken(@RequestHeader("Authorization") String token) {
+        return "Token recibido: " + token;
+    }
+
     @GetMapping("/dameToken")
     public String dameToken() {
-        String x = tokenService.generateToken("diego");
-        String r=tokenService.getUsernameFromToken(x);
-        return r;
+        return tokenService.generateToken("pepe");
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     public List<Monopatin> dameMonos() {
         return monoRepo.findAll();
     }
 
     @PostMapping
-    @Operation(summary = "Agregar un monopatin", description = "Se incorpora un monoptin especificado en un JSON")
+    // @Operation(summary = "Agregar un monopatin", description = "Se incorpora un monoptin especificado en un JSON")
     public Monopatin registrarMono(@RequestBody Monopatin m) {
         return monoRepo.save(m);
     }
 
     @PutMapping("/encender/{idMono}")
-    @Operation(summary = "Encender el Monopatin", description = "Se computa el consomo y se hace uso de la bateria")
+    // @Operation(summary = "Encender el Monopatin", description = "Se computa el consomo y se hace uso de la bateria")
 
     public String encender(
-            @Parameter(description = "El Id del Monopatin a encender", example = "123") @PathVariable Long idMono) {
+            // @Parameter(description = "El Id del Monopatin a encender", example = "123") 
+            @PathVariable Long idMono) {
         Monopatin m = monoRepo.findById(idMono).get();
         if (m != null) {
             m.setEncendido(true);
