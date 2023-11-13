@@ -1,6 +1,5 @@
 package poroto.po.monopatin.controller;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.function.EntityResponse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,12 +27,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import poroto.po.monopatin.dtos.FinalizarViajeDTO;
 import poroto.po.monopatin.dtos.ReporteMonopatinesDTO;
-// import poroto.po.monopatin.dtos.terminarViajeDTO;
-// import io.swagger.annotations.Api;
-// import io.swagger.annotations.ApiOperation;
 import poroto.po.monopatin.entity.Monopatin;
-import poroto.po.monopatin.entity.Parada;
-// import poroto.po.monopatin.jwt.GenToken;
 import poroto.po.monopatin.repsitory.MonopatinRepo;
 import poroto.po.monopatin.response.Distancia;
 import poroto.po.monopatin.servicio.CuentaServicio;
@@ -53,39 +46,37 @@ public class MonopatinController {
     private ParadaServicio servicio;
 
     @Autowired
-    private CuentaServicio cuentaServicio;
-
-    @Autowired
-    private ViajeServicio viajeServicio;
-
-    @Autowired
     private ParadaServicio paradaServicio;
-    
+
     @Autowired
     private TokenServicio token;
 
     @GetMapping
+    @Operation(summary = "Lista monopatines", description = "Da una lista detallada de todos los monopatines en formato JSON")
+
     public List<Monopatin> dameMonos(@RequestHeader("Authorization") String authorization) {
-        System.out.println(authorization);
-        if (token.autorizado(authorization)){
-            System.out.println("token autorizado");
-            return monoRepo.findAll();
-        }
-        System.out.println("token no autorizado");
-        return null;
+        if (token.autorizado(authorization) == null)
+            return null;
+        return monoRepo.findAll();
     }
 
     @PostMapping
     @Operation(summary = "Agregar un monopatin", description = "Se incorpora un monoptin especificado en un JSON")
-    public Monopatin registrarMono(@RequestBody Monopatin m) {
-        return monoRepo.save(m);
+    public Monopatin registrarMono(@RequestBody Monopatin m, @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == "ADMIN") {
+            return monoRepo.save(m);
+        }
+        return null;
     }
 
     @PutMapping("/encender/{idMono}")
     @Operation(summary = "Encender el Monopatin", description = "Se computa el consomo y se hace uso de la bateria")
 
     public String encender(
-            @Parameter(description = "El Id del Monopatin a encender", example = "123") @PathVariable Long idMono) {
+            @Parameter(description = "El Id del Monopatin a encender", example = "123") @PathVariable Long idMono,
+            @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == null)
+            return null;
         Monopatin m = monoRepo.findById(idMono).get();
         if (m != null) {
             m.setEncendido(true);
@@ -96,17 +87,16 @@ public class MonopatinController {
 
     }
 
-    // @GetMapping("/estaEstacionado/{id}")
-
     @PutMapping("/apagar/{id}")
-    public String apagar(@PathVariable Long id, @RequestBody FinalizarViajeDTO finalizarViajeDTO) {
+    @Operation(summary = "Apaga circuito electrico monopatin", description = "Da señal a monopatin de cortar circuitos electricos")
+
+    public String apagar(@PathVariable Long id, @RequestBody FinalizarViajeDTO finalizarViajeDTO,
+            @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == null)
+            return null;
         Monopatin m = monoRepo.findById(id).get();
 
-        System.out.println(finalizarViajeDTO.toString());
-
         Boolean estacionado = paradaServicio.estaEstacionado(m);
-
-        // boolean estacionado = true;
 
         if (estacionado) {
             Long kmts = finalizarViajeDTO.getKmts();
@@ -122,36 +112,63 @@ public class MonopatinController {
     }
 
     @PutMapping("/mantenimiento/{id}")
-    public Monopatin ponerEnReparacion(@PathVariable Long id) {
-        Monopatin m = monoRepo.findById(id).get();
-        m.setEn_taller(true);
-        return monoRepo.save(m);
+    @Operation(summary = "Agregar a area mantenimiento", description = "Registra en el sistema que la unidad se encuentra en reparaciones o mantenimiento")
+
+    public Monopatin ponerEnReparacion(@PathVariable Long id, @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == "ADMIN") {
+
+            Monopatin m = monoRepo.findById(id).get();
+            m.setEn_taller(true);
+            return monoRepo.save(m);
+        }
+        return null;
 
     }
 
     @PutMapping("/mantenimiento/{id}/listo")
-    public Monopatin ponerEnLaCalle(@PathVariable Long id) {
-        Monopatin m = monoRepo.findById(id).get();
-        m.setEn_taller(false);
-        return monoRepo.save(m);
+    @Operation(summary = "Listo para usar", description = "Registra que el monopatin se incorpora a su uso habitual")
+
+    public Monopatin ponerEnLaCalle(@PathVariable Long id, @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == "ADMIN") {
+
+            Monopatin m = monoRepo.findById(id).get();
+            m.setEn_taller(false);
+            return monoRepo.save(m);
+        }
+        return null;
 
     }
 
     // Si esta prendido se pone en standby y si es al contrario se prende
     @GetMapping("/ponerEnStandBy/{id}")
-    public Monopatin suspenderMonopatin(@PathVariable Long id) {
+    @Operation(summary = "StanBy", description = "Se contacta con el sistema de ahorro de energia")
+
+    public Monopatin suspenderMonopatin(@PathVariable Long id, @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == null)
+            return null;
         Monopatin m = monoRepo.findById(id).get();
         m.setEncendido(!m.isEncendido());
         return monoRepo.save(m);
     }
 
     @DeleteMapping("/{id}")
-    public void borrar(@PathVariable Long id) {
-        monoRepo.deleteById(id);
+    @Operation(summary = "Borrar monopatin", description = "Se retira del sistema tal monopatin")
+
+    public void borrar(@PathVariable Long id, @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == "ADMIN") {
+
+            monoRepo.deleteById(id);
+        }
+        return;
     }
 
     @GetMapping("/paradaCercana/{idMono}")
-    public List<Distancia> dameParadaCercana(@PathVariable Long idMono) {
+    @Operation(summary = "Lista de paradas cercanas", description = "Lista ordenada con las paradas mas cercanas a tal monopatin")
+
+    public List<Distancia> dameParadaCercana(@PathVariable Long idMono,
+            @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == null)
+            return null;
         // public List<Monopatin> dameParadas() {
         List<Distancia> resultado = new ArrayList<>();
         Monopatin monopatin = monoRepo.findById(idMono).get();
@@ -182,7 +199,11 @@ public class MonopatinController {
     }
 
     @GetMapping("/estaListoParaUsar/{id}")
-    public Boolean estaLista(@PathVariable Long id) {
+    @Operation(summary = "Disponobilidad", description = "Aqui se cosulta si esta listo para ser usado y emprender un viaje")
+
+    public Boolean estaLista(@PathVariable Long id, @RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == null)
+            return null;
         Monopatin m = this.monoRepo.getById(id);
         if (m == null)
             return false;
@@ -190,8 +211,12 @@ public class MonopatinController {
     }
 
     @GetMapping("/reporteMonopatines")
-    public List<ReporteMonopatinesDTO> generarReporte() {
+    @Operation(summary = "Reporte", description = "Brinda reporte como se lo solicito en el inciso X del contrato Z")
+
+    public List<ReporteMonopatinesDTO> generarReporte(@RequestHeader("Authorization") String authorization) {
         // Hardcodeado para que siempre tenga pausa
+        if (token.autorizado(authorization) == null)
+            return null;
         boolean conPausa = true;
         ArrayList<ReporteMonopatinesDTO> reporte = new ArrayList<ReporteMonopatinesDTO>();
 
@@ -214,7 +239,11 @@ public class MonopatinController {
     }
 
     @GetMapping("/cantidadMonopatines")
-    public Map<String, Integer> obtenerCantidadMonopatines() {
+    @Operation(summary = "Cantidad de monopatines", description = "Brinda la cantidad detallada de monopatines en operacion y en mantenimiento")
+
+    public Map<String, Integer> obtenerCantidadMonopatines(@RequestHeader("Authorization") String authorization) {
+        if (token.autorizado(authorization) == null)
+            return null;
         int enOperacion = monoRepo.countMonopatinesEnOperacion();
         int enMantenimiento = monoRepo.countMonopatinesEnMantenimiento();
 

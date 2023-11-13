@@ -16,13 +16,13 @@ public class TokenServicio {
         this.rest = rest;
     }
     
-    public Boolean autorizado(String authorizationHeader){
+    public String autorizado(String authorizationHeader){
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String tokenSinBearer = authorizationHeader.substring(7);
-            return rest.getForEntity(token+"/usuarios/verificarToken/"+tokenSinBearer, Boolean.class).getBody();
+            return rest.getForEntity(token+"/usuarios/verificarToken/"+tokenSinBearer, String.class).getBody();
         } else {
            // "No se proporcionó un token Bearer válido en el encabezado Authorization.";
-           return false;
+           return null;
         }
    }
     
