@@ -39,6 +39,7 @@ import poroto.po.monopatin.repsitory.MonopatinRepo;
 import poroto.po.monopatin.response.Distancia;
 import poroto.po.monopatin.servicio.CuentaServicio;
 import poroto.po.monopatin.servicio.ParadaServicio;
+import poroto.po.monopatin.servicio.TokenServicio;
 import poroto.po.monopatin.servicio.ViajeServicio;
 
 @RestController
@@ -59,7 +60,9 @@ public class MonopatinController {
 
     @Autowired
     private ParadaServicio paradaServicio;
-
+    
+    @Autowired
+    private TokenServicio token;
     // @Autowired
     // private GenToken tokenService;
 
@@ -71,17 +74,17 @@ public class MonopatinController {
     // }
 
     @GetMapping
-    public List<Monopatin> dameMonos(@RequestHeader("Authorization") String authorizationHeader) {
+    public List<Monopatin> dameMonos(@RequestHeader("Authorization") String authorization) {
 
-    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-        // Extrae el token después de "Bearer "
-        String token = authorizationHeader.substring(7);
-        System.out.println("Token Bearer: " + token);
-        } else {
-            // return "No se proporcionó un token Bearer válido en el encabezado Authorization.";
+        if (!token.autorizado(authorization)){
+            return monoRepo.findAll();
+
         }
-        return monoRepo.findAll();
+        return null;
     }
+
+    
+    
 
     @PostMapping
     @Operation(summary = "Agregar un monopatin", description = "Se incorpora un monoptin especificado en un JSON")
