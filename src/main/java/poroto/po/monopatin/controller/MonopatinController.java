@@ -67,8 +67,9 @@ public class MonopatinController {
     @GetMapping
     public List<Monopatin> dameMonos(@RequestHeader("Authorization") String authorization) {
         System.out.println(authorization);
-        if (token.autorizado(authorization)){
-            System.out.println("token autorizado");
+        String rolUsuario = token.tipoUsuario(authorization);
+        if (rolUsuario != null){
+            System.out.println("token autorizado, tipo de usuario: " + rolUsuario);
             return monoRepo.findAll();
         }
         System.out.println("token no autorizado");
