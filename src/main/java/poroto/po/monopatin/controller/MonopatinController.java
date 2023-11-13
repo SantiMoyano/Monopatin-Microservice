@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.function.EntityResponse;
@@ -33,7 +34,7 @@ import poroto.po.monopatin.dtos.ReporteMonopatinesDTO;
 // import io.swagger.annotations.ApiOperation;
 import poroto.po.monopatin.entity.Monopatin;
 import poroto.po.monopatin.entity.Parada;
-import poroto.po.monopatin.jwt.GenToken;
+// import poroto.po.monopatin.jwt.GenToken;
 import poroto.po.monopatin.repsitory.MonopatinRepo;
 import poroto.po.monopatin.response.Distancia;
 import poroto.po.monopatin.servicio.CuentaServicio;
@@ -59,18 +60,26 @@ public class MonopatinController {
     @Autowired
     private ParadaServicio paradaServicio;
 
-    @Autowired
-    private GenToken tokenService;
+    // @Autowired
+    // private GenToken tokenService;
 
-    @GetMapping("/dameToken")
-    public String dameToken() {
-        String x = tokenService.generateToken("diego");
-        String r=tokenService.getUsernameFromToken(x);
-        return r;
-    }
+    // @GetMapping("/dameToken")
+    // public String dameToken() {
+    //     String x = tokenService.generateToken("diego");
+    //     String r=tokenService.getUsernameFromToken(x);
+    //     return r;
+    // }
 
     @GetMapping
-    public List<Monopatin> dameMonos() {
+    public List<Monopatin> dameMonos(@RequestHeader("Authorization") String authorizationHeader) {
+
+    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+        // Extrae el token después de "Bearer "
+        String token = authorizationHeader.substring(7);
+        System.out.println("Token Bearer: " + token);
+        } else {
+            // return "No se proporcionó un token Bearer válido en el encabezado Authorization.";
+        }
         return monoRepo.findAll();
     }
 
