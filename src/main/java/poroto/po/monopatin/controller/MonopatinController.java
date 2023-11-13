@@ -63,28 +63,17 @@ public class MonopatinController {
     
     @Autowired
     private TokenServicio token;
-    // @Autowired
-    // private GenToken tokenService;
-
-    // @GetMapping("/dameToken")
-    // public String dameToken() {
-    //     String x = tokenService.generateToken("diego");
-    //     String r=tokenService.getUsernameFromToken(x);
-    //     return r;
-    // }
 
     @GetMapping
     public List<Monopatin> dameMonos(@RequestHeader("Authorization") String authorization) {
-
-        if (!token.autorizado(authorization)){
+        System.out.println(authorization);
+        if (token.autorizado(authorization)){
+            System.out.println("token autorizado");
             return monoRepo.findAll();
-
         }
+        System.out.println("token no autorizado");
         return null;
     }
-
-    
-    
 
     @PostMapping
     @Operation(summary = "Agregar un monopatin", description = "Se incorpora un monoptin especificado en un JSON")
